@@ -1,0 +1,7 @@
+python-pptx
+matplotlib
+nibabel
+numpy
+Pillow
+imageio
+tk
