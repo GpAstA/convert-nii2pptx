@@ -5,3 +5,7 @@ numpy
 Pillow
 imageio
 tk
+PyMuPDF  
+Pillow 
+opencv-python
+pywin32
