@@ -140,40 +140,46 @@ def save_as_nii(images, output_filename="output_image.nii"):
     nib.save(nii_img, output_filename)
     print(f"NIfTIファイルを保存しました: {output_filename}")
 
-# tkinterでファイルを選択させる
-def select_pdf_file():
+# 指定されたフォルダ配下のすべてのpptxファイルを処理
+def process_pptx_in_folder(folder_path):
+    # os.walkで再帰的に全てのディレクトリを探索
+    for dirpath, _, filenames in os.walk(folder_path):
+        for filename in filenames:
+            if filename.endswith(".pdf"):
+                pptx_file = os.path.join(dirpath, filename)
+                print(f"Processing {pptx_file}...")
+                
+                # 元のファイル名を取得し、出力ファイル名を設定
+                base_name = os.path.splitext(os.path.basename(pptx_file))[0]
+                output_filename = os.path.join(os.path.dirname(pptx_file), f"convert_{base_name}.nii")
+
+                # PDFファイルを画像に変換
+                pdf_images = get_pdf_images(pptx_file)
+
+                # 画像をNumPy配列に変換
+                numpy_images = images_to_numpy(pdf_images)
+
+                # 色範囲に基づいてマスクを抽出
+                mask_images = mask_extracted(numpy_images, target_color_ranges)
+
+                # 540x540にリサイズ（長い方を両端カット）、90度単位で回転（num_rotationsにより調整）
+                num_rotations = 1  # 90度右回り
+                resized_images = resize_images(mask_images, target_size=(540, 540), num_rotations=num_rotations)
+
+                # NIfTIファイルとして保存
+                save_as_nii(resized_images, output_filename)
+
+# tkinterでフォルダを選択させる
+def select_folder():
     root = tk.Tk()
     root.withdraw()  # GUIウィンドウを表示しない
-    file_path = filedialog.askopenfilename(
-        title="PDFファイルを選択してください",
-        filetypes=[("PDF files", "*.pdf")]
-    )
-    return file_path
+    folder_path = filedialog.askdirectory(title="処理するフォルダを選択してください")
+    return folder_path
 
 if __name__ == "__main__":
-    # tkinterを使ってPDFファイルを選択
-    pdf_path = select_pdf_file()
-    
-    if pdf_path:
-        # 選択されたファイルのパスと同じディレクトリに出力する
-        output_dir = os.path.dirname(pdf_path)
-        base_name = os.path.splitext(os.path.basename(pdf_path))[0]
-        output_filename = os.path.join(output_dir, f"convert_{base_name}.nii")
-        
-        # PDFファイルを画像に変換
-        pdf_images = get_pdf_images(pdf_path)
-
-        # 画像をNumPy配列に変換
-        numpy_images = images_to_numpy(pdf_images)
-
-        # 色範囲に基づいてマスクを抽出
-        mask_images = mask_extracted(numpy_images, target_color_ranges)
-
-        # 540x540にリサイズ（長い方を両端カット）、90度単位で回転（num_rotationsにより調整）
-        num_rotations = 1  # 90度右回り
-        resized_images = resize_images(mask_images, target_size=(540, 540), num_rotations=num_rotations)
-
-        # NIfTIファイルとして保存
-        save_as_nii(resized_images, output_filename)
+    # tkinterを使ってフォルダを選択
+    folder_path = select_folder()
+    if folder_path:
+        process_pptx_in_folder(folder_path)
     else:
-        print("PDFファイルが選択されていません。")
+        print("フォルダが選択されていません。")
