@@ -13,7 +13,8 @@ target_color_ranges = [
     (np.array([40, 180, 240]), np.array([70, 255, 255])),   # 青
     (np.array([200, 0, 0]), np.array([255, 100, 100])),     # 赤
     (np.array([80, 180, 0]), np.array([120, 255, 100])),    # 緑
-    (np.array([200, 180, 0]), np.array([255, 230, 100]))    # 黄
+    (np.array([200, 180, 0]), np.array([255, 230, 100])),    # 黄
+    (np.array([0, 200, 0]), np.array([30, 255, 30])),    # 黄
 ]
 
 def get_pdf_images(pdf_path):
