@@ -18,5 +18,5 @@ def convert_pptx_in_folder(input_folder):
                 pptx_to_pdf(pptx_file, pdf_file)
                 print(f"{pptx_file} を {pdf_file} に変換しました。")
 
-input_folder = r"C:\Users\ME-PC2\OneDrive - Hiroshima University (1)\ドキュメント\4年\MRI脳画像\損傷度\241015‗エジンバラ\20241016_色塗り\20241016_色塗り_convrt_nii"
+input_folder = r"C:\Users\ME-PC2\OneDrive - Hiroshima University (1)\ドキュメント\4年\MRI脳画像\損傷度\241015‗エジンバラ\241020_nii"
 convert_pptx_in_folder(input_folder)

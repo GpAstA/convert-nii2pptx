@@ -59,41 +59,78 @@ def mask_extracted(image_array, target_color_ranges):
     return combined_images
 
 # 長い方の両端を切り取る関数
-def crop_to_square(image, target_size=540):
-    """
-    長い方の両端を切り取って正方形にクロップする。
-    画像が2次元または3次元（カラー）の場合に対応。
-    """
-    height, width = image.shape[:2]  # 画像の高さと幅を取得
+# def crop_to_square(image, target_size=540):
+#     """
+#     長い方の両端を切り取って正方形にクロップする。
+#     画像が2次元または3次元（カラー）の場合に対応。
+#     """
+#     height, width = image.shape[:2]  # 画像の高さと幅を取得
     
-    # モノクロ画像の場合は2次元、カラー画像の場合は3次元
-    if len(image.shape) == 3:
-        # 縦長か横長かを判定して長辺を540に合わせる
-        if height > width:
-            # 縦長の場合、高さを540に合わせて中央から両端を切り取る
-            crop_start = (height - target_size) // 2
-            cropped_image = image[crop_start:crop_start + target_size, :, :]  # 高さを540に
-        elif width > height:
-            # 横長の場合、幅を540に合わせて中央から両端を切り取る
-            crop_start = (width - target_size) // 2
-            cropped_image = image[:, crop_start:crop_start + target_size, :]  # 幅を540に
-        else:
-            # 既に正方形の場合はそのまま
-            cropped_image = image
-    else:  # 画像が2次元の場合（モノクロ画像の場合）
-        if height > width:
-            # 縦長の場合、高さを540に合わせて中央から両端を切り取る
-            crop_start = (height - target_size) // 2
-            cropped_image = image[crop_start:crop_start + target_size, :]  # 高さを540に
-        elif width > height:
-            # 横長の場合、幅を540に合わせて中央から両端を切り取る
-            crop_start = (width - target_size) // 2
-            cropped_image = image[:, crop_start:crop_start + target_size]  # 幅を540に
-        else:
-            # 既に正方形の場合はそのまま
-            cropped_image = image
+#     # モノクロ画像の場合は2次元、カラー画像の場合は3次元
+#     if len(image.shape) == 3:
+#         # 縦長か横長かを判定して長辺を540に合わせる
+#         if height > width:
+#             # 縦長の場合、高さを540に合わせて中央から両端を切り取る
+#             crop_start = (height - target_size) // 2
+#             cropped_image = image[crop_start:crop_start + target_size, :, :]  # 高さを540に
+#         elif width > height:
+#             # 横長の場合、幅を540に合わせて中央から両端を切り取る
+#             crop_start = (width - target_size) // 2
+#             cropped_image = image[:, crop_start:crop_start + target_size, :]  # 幅を540に
+#         else:
+#             # 既に正方形の場合はそのまま
+#             cropped_image = image
+#     else:  # 画像が2次元の場合（モノクロ画像の場合）
+#         if height > width:
+#             # 縦長の場合、高さを540に合わせて中央から両端を切り取る
+#             crop_start = (height - target_size) // 2
+#             cropped_image = image[crop_start:crop_start + target_size, :]  # 高さを540に
+#         elif width > height:
+#             # 横長の場合、幅を540に合わせて中央から両端を切り取る
+#             crop_start = (width - target_size) // 2
+#             cropped_image = image[:, crop_start:crop_start + target_size]  # 幅を540に
+#         else:
+#             # 既に正方形の場合はそのまま
+#             cropped_image = image
     
+#     return cropped_image
+# 長い方の両端を切り取る関数
+def crop_to_square(image, target_size=512):
+    """
+    画像を短い方の辺に合わせて中央から正方形にクロップし、指定のサイズにリサイズする。
+    画像が2次元（モノクロ）または3次元（カラー）の場合に対応。
+    """
+    # 画像の高さと幅を取得
+    height, width = image.shape[:2]
+
+    # モノクロ画像かカラー画像かの確認
+    is_color = len(image.shape) == 3  # Trueならカラー画像
+
+    # 短い方の辺に合わせて中央からクロップ
+    if height > width:
+        # 縦長の場合、上下を切り取る
+        crop_start = (height - width) // 2
+        if is_color:
+            cropped_image = image[crop_start:crop_start + width, :, :]
+        else:
+            cropped_image = image[crop_start:crop_start + width, :]
+    elif width > height:
+        # 横長の場合、左右を切り取る
+        crop_start = (width - height) // 2
+        if is_color:
+            cropped_image = image[:, crop_start:crop_start + height, :]
+        else:
+            cropped_image = image[:, crop_start:crop_start + height]
+    else:
+        # 既に正方形の場合はそのまま
+        cropped_image = image
+
+    # 切り取った画像をターゲットサイズにリサイズ
+    if cropped_image.shape[0] != target_size:
+        cropped_image = cv2.resize(cropped_image, (target_size, target_size), interpolation=cv2.INTER_NEAREST)
+
     return cropped_image
+
 
 # 画像を90度単位で回転させる関数
 def rotate_image(image, num_rotations):
@@ -125,7 +162,8 @@ def resize_images(images, target_size=(540, 540), num_rotations=0):
 
         # 540x540にリサイズ後、90度単位で回転させる
         rotated_image = rotate_image(resized_image, num_rotations)
-        resized_images.append(rotated_image)
+        flipped_image = cv2.flip(rotated_image, 0) 
+        resized_images.append(flipped_image)
     
     return resized_images
 
@@ -165,7 +203,7 @@ def process_pptx_in_folder(folder_path):
 
                 # 540x540にリサイズ（長い方を両端カット）、90度単位で回転（num_rotationsにより調整）
                 num_rotations = 1  # 90度右回り
-                resized_images = resize_images(mask_images, target_size=(540, 540), num_rotations=num_rotations)
+                resized_images = resize_images(mask_images, target_size=(512, 512), num_rotations=num_rotations)
 
                 # NIfTIファイルとして保存
                 save_as_nii(resized_images, output_filename)
